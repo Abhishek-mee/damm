@@ -1,0 +1,28 @@
+# Secrets
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Local tooling / generated files
+node_modules/
+dist/
+build/
+out/
+coverage/
+*.log
+
+# OpenCode local state
+.opencode/cache/
+.opencode/state/
+.opencode/tmp/
+
+# Git worktrees (created outside the repo by default)
+.worktrees/
+worktrees/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

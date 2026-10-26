@@ -1,0 +1,51 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for the director. Each agent overrides this with a free
+  // OpenRouter model chosen for its role. Swap a model if it fails the
+  // `npm run check-models` tool-call test.
+  "model": "openrouter/thinkingmachines/inkling:free",
+  "default_agent": "director",
+
+  "instructions": ["AGENTS.md", "docs/WORKTREES.md", "docs/CPP_STACK.md"],
+
+  "permissions": [
+    // Keys and credentials are never readable or writable by agents.
+    { "action": "read", "resource": "**/.env.local", "effect": "deny" },
+    { "action": "read", "resource": "**/.env", "effect": "deny" },
+    { "action": "read", "resource": "**/.env.production", "effect": "deny" },
+    { "action": "read", "resource": "**/.env.development", "effect": "deny" },
+    { "action": "read", "resource": "**/*.pem", "effect": "deny" },
+    { "action": "read", "resource": "**/*.key", "effect": "deny" },
+    { "action": "read", "resource": "**/id_rsa*", "effect": "deny" },
+
+    { "action": "edit", "resource": "**/.env.local", "effect": "deny" },
+    { "action": "edit", "resource": "**/.env", "effect": "deny" },
+    { "action": "edit", "resource": "**/.env.production", "effect": "deny" },
+    { "action": "edit", "resource": "**/.env.development", "effect": "deny" },
+    { "action": "edit", "resource": "**/*.pem", "effect": "deny" },
+    { "action": "edit", "resource": "**/*.key", "effect": "deny" },
+    { "action": "edit", "resource": ".git/**", "effect": "deny" },
+
+    // Destructive or publishing commands require a human decision.
+    { "action": "shell", "resource": "git push*", "effect": "ask" },
+    { "action": "shell", "resource": "git reset --hard*", "effect": "ask" },
+    { "action": "shell", "resource": "git clean*", "effect": "ask" },
+    { "action": "shell", "resource": "rm *", "effect": "ask" },
+    { "action": "shell", "resource": "del *", "effect": "ask" },
+    { "action": "shell", "resource": "Remove-Item *", "effect": "ask" },
+
+    // Agents live in their own checkout. Crossing into another checkout is
+    // a prompt, not a silent write.
+    { "action": "external_directory", "resource": "*", "effect": "ask" }
+  ],
+
+  "providers": {
+    "openrouter": {
+      "headers": {
+        "HTTP-Referer": "https://github.com/Abhishek-mee/damm",
+        "X-Title": "DAMM"
+      }
+    }
+  }
+}
