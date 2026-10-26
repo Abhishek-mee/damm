@@ -10,7 +10,7 @@ Each phase ends with something playable or verifiable. Do not start a phase befo
 - [x] Secret policy and validation
 - [ ] Human adds OpenRouter key and connects the provider
 - [ ] `npm run check-models` passes on the assigned models
-- [ ] First agent worktrees created
+- [x] First agent worktrees created
 
 **Acceptance:** `npm run doctor`, `npm run validate`, and `npm run check-models` succeed; the human can open a worktree and select its agent.
 
