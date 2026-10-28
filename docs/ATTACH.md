@@ -93,6 +93,11 @@ Rules for a good lane map:
 - Secrets (`.env*`, keys) are never in a lane.
 - Docs may be shared, but `docs/roadmap.md` has one owner.
 
+Worked maps you can copy instead of starting from the sketch above:
+
+- TypeScript web app (Next.js): [`examples/web/`](../examples/web/README.md). One owner per path, empty `reviewer`, no build output in a lane.
+- C++ game: [`examples/game/`](../examples/game/README.md).
+
 ## The agent kit is local
 
 The kit is excluded through `.git/info/exclude`, not `.gitignore`, so:

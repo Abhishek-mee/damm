@@ -58,7 +58,7 @@ DAMM is a **workspace**, not a framework and not a game. It ships:
 - **free OpenRouter models** by default
 - **validation, CI, and a doctor** so the setup stays honest
 
-It works on a web app, a CLI, a library, a data pipeline, or a game. Game development is one example in [`examples/game/`](examples/game/).
+It works on a web app, a CLI, a library, a data pipeline, or a game. Two worked lane maps ship with the repo: a TypeScript web app in [`examples/web/`](examples/web/) and a C++ game in [`examples/game/`](examples/game/).
 
 ## Quick start
 
@@ -258,7 +258,8 @@ Each skill is a `SKILL.md` with concrete rules, commands, and a definition of do
 │   ├── FAQ.md                common questions
 │   ├── roadmap.md            workspace phases and acceptance
 │   └── assets/banner.svg     this README's banner
-├── examples/game/            one worked example: C++23 + SDL3 + OpenGL
+├── examples/game/            worked example: C++23 + SDL3 + OpenGL
+├── examples/web/             worked example: TypeScript + Next.js
 ├── scripts/
 │   ├── setup.mjs             one-command clean-clone setup
 │   ├── attach.mjs            install the kit into another project
