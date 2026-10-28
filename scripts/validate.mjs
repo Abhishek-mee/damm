@@ -252,25 +252,43 @@ function git(args) {
 const requiredFiles = [
   'README.md',
   'AGENTS.md',
+  'CONTRIBUTING.md',
+  'CODE_OF_CONDUCT.md',
+  'SECURITY.md',
+  'CHANGELOG.md',
   'LICENSE',
   'THIRD_PARTY_NOTICES.md',
   'licenses/ECC-LICENSE.txt',
   '.gitignore',
   '.env.example',
   '.opencode/opencode.jsonc',
+  'damm.config.json',
+  'damm.schema.json',
+  'damm.tasks.example.json',
   'docs/AGENTS.md',
   'docs/WORKTREES.md',
-  'docs/CPP_STACK.md',
+  'docs/SETUP.md',
+  'docs/ATTACH.md',
+  'docs/PARALLEL.md',
+  'docs/FAQ.md',
   'docs/UPSTREAM.md',
   'docs/roadmap.md',
-  'docs/design/GDD.md',
   'package.json',
   'scripts/doctor.mjs',
   'scripts/validate.mjs',
   'scripts/check-models.mjs',
   'scripts/worktree.mjs',
   'scripts/ownership.mjs',
+  'scripts/context.mjs',
+  'scripts/kit.mjs',
+  'scripts/attach.mjs',
+  'scripts/fanout.mjs',
+  'scripts/setup.mjs',
   '.github/workflows/validate.yml',
+  '.github/pull_request_template.md',
+  '.github/ISSUE_TEMPLATE/bug_report.yml',
+  '.github/ISSUE_TEMPLATE/feature_request.yml',
+  '.github/dependabot.yml',
 ];
 
 for (const file of requiredFiles) {
@@ -315,6 +333,71 @@ if (config) {
     'Config must ask before git push',
   );
   check(Boolean(config.providers?.openrouter), 'Config must define the openrouter provider');
+}
+
+// ---------------------------------------------------------------------------
+// Workspace config
+// ---------------------------------------------------------------------------
+
+let workspaceConfig = null;
+try {
+  workspaceConfig = JSON.parse(read('damm.config.json'));
+} catch (error) {
+  fail(`damm.config.json does not parse: ${error.message}`);
+}
+
+if (workspaceConfig) {
+  check(workspaceConfig.version === 1, 'damm.config.json: version must be 1');
+  check(
+    typeof workspaceConfig.worktreeRoot === 'string' && workspaceConfig.worktreeRoot.length > 0,
+    'damm.config.json: worktreeRoot must be a non-empty string',
+  );
+
+  const configuredAgents = Object.keys(workspaceConfig.agents ?? {});
+  check(configuredAgents.length === 11, `damm.config.json: expected 11 agents, found ${configuredAgents.length}`);
+
+  for (const [agent, lanes] of Object.entries(workspaceConfig.agents ?? {})) {
+    check(Array.isArray(lanes), `damm.config.json: lanes for "${agent}" must be an array`);
+    for (const lane of lanes ?? []) {
+      check(typeof lane === 'string' && lane.length > 0, `damm.config.json: "${agent}" has an empty lane`);
+      check(!lane.includes('\\'), `damm.config.json: "${agent}" lane "${lane}" must use forward slashes`);
+      check(!path.isAbsolute(lane), `damm.config.json: "${agent}" lane "${lane}" must be repo-relative`);
+    }
+  }
+
+  check(
+    Array.isArray(workspaceConfig.agents?.reviewer) && workspaceConfig.agents.reviewer.length === 0,
+    'damm.config.json: reviewer must have an empty lane (read-only)',
+  );
+}
+
+try {
+  const schema = JSON.parse(read('damm.schema.json'));
+  check(typeof schema === 'object' && schema !== null, 'damm.schema.json must be a JSON object');
+} catch (error) {
+  fail(`damm.schema.json does not parse: ${error.message}`);
+}
+
+// Code lanes must not overlap: two agents editing the same source file in
+// parallel is how work gets lost. Documentation may be shared.
+const codePrefixes = ['src/', 'engine/', 'web/', 'shaders/', 'assets/', 'tests/'];
+const codeLanes = Object.entries(workspaceConfig?.agents ?? {}).flatMap(([agent, lanes]) =>
+  (lanes ?? [])
+    .filter((lane) => codePrefixes.some((prefix) => lane.startsWith(prefix)))
+    .map((lane) => ({ agent, lane })),
+);
+
+for (let first = 0; first < codeLanes.length; first += 1) {
+  for (let second = first + 1; second < codeLanes.length; second += 1) {
+    const a = codeLanes[first];
+    const b = codeLanes[second];
+    if (a.agent === b.agent) continue;
+    const aPrefix = a.lane.replace(/\*\*.*$/, '');
+    const bPrefix = b.lane.replace(/\*\*.*$/, '');
+    if (aPrefix.startsWith(bPrefix) || bPrefix.startsWith(aPrefix)) {
+      warn(`code lane overlap: ${a.agent} "${a.lane}" and ${b.agent} "${b.lane}"`);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -469,6 +552,28 @@ if (exists('docs/AGENTS.md')) {
   }
 }
 
+// The old roster must not leak back into the docs.
+const retiredAgents = ['engine-architect', 'renderer', 'gameplay', 'audio'];
+for (const file of ['README.md', 'AGENTS.md', 'docs/AGENTS.md', 'docs/WORKTREES.md', 'damm.config.json']) {
+  if (!exists(file)) continue;
+  const text = read(file);
+  for (const retired of retiredAgents) {
+    check(!text.includes(`\`${retired}\``), `${file}: still references the retired agent "${retired}"`);
+  }
+}
+
+// The example task file must point at real agents.
+if (exists('damm.tasks.example.json')) {
+  try {
+    const example = JSON.parse(read('damm.tasks.example.json'));
+    for (const task of example.tasks ?? []) {
+      check(agents.has(task.agent), `damm.tasks.example.json: unknown agent "${task.agent}"`);
+    }
+  } catch (error) {
+    fail(`damm.tasks.example.json does not parse: ${error.message}`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Scripts
 // ---------------------------------------------------------------------------
@@ -504,13 +609,20 @@ if (exists('.env.example')) {
 const gitignore = read('.gitignore');
 check(/\.env\.\*/.test(gitignore), '.gitignore must ignore .env.* files');
 check(/!\.env\.example/.test(gitignore), '.gitignore must keep .env.example');
+check(/damm\.local\.json/.test(gitignore), '.gitignore must ignore damm.local.json');
+check(/damm\.tasks\.json/.test(gitignore), '.gitignore must ignore damm.tasks.json');
+check(/\.damm\//.test(gitignore), '.gitignore must ignore .damm/');
 
+const trackedLocal = git(['ls-files', '--error-unmatch', 'damm.local.json']);
 const trackedEnv = git(['ls-files', '--error-unmatch', '.env.local']);
 const isGitRepo = git(['rev-parse', '--is-inside-work-tree']).status === 0;
 if (!isGitRepo) {
   warn('Not a git repository; skipping the .env.local tracking check');
-} else if (trackedEnv.status === 0) {
-  fail('.env.local is tracked by git. Remove it from the index; never commit keys.');
+} else {
+  if (trackedEnv.status === 0) fail('.env.local is tracked by git. Remove it from the index; never commit keys.');
+  if (trackedLocal.status === 0) {
+    fail('damm.local.json is tracked by git. It is local attach state; remove it from the index.');
+  }
 }
 
 if (exists('.env.local')) {

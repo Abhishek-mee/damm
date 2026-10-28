@@ -1,89 +1,72 @@
 # Roadmap
 
-Each phase ends with something playable or verifiable. Do not start a phase before the previous acceptance criteria pass.
+DAMM is a workspace, not a product. The roadmap tracks the workspace itself; your project's roadmap belongs in your project.
 
-## Phase 0 — Agent workspace (current)
+Each phase ends with something verifiable. Do not start a phase before the previous acceptance criteria pass.
 
-- [x] Agent roster and skills
+## Phase 0 — Foundation (done)
+
+- [x] 11 agents with narrow ownership lanes
+- [x] 17 reusable skills
 - [x] Free OpenRouter model assignments
 - [x] Git worktrees + ownership checks
 - [x] Secret policy and validation
-- [ ] Human adds OpenRouter key and connects the provider
-- [ ] `npm run check-models` passes on the assigned models
-- [x] First agent worktrees created
+- [x] One-command setup and CI
 
-**Acceptance:** `npm run doctor`, `npm run validate`, and `npm run check-models` succeed; the human can open a worktree and select its agent.
+**Acceptance:** `npm run validate` and `npm run doctor` pass from a clean clone.
 
-## Phase 1 — Window, loop, input, first pixel
+## Phase 1 — Parallel by default (current)
 
-Owner: `engine-architect` + `renderer` + `gameplay`
+- [ ] `npm run attach -- <project>` installs the kit into any git repository
+- [ ] Worktree commands operate on the attached project
+- [ ] `npm run fanout` runs 2–4 agents from a task file, dry-run by default
+- [ ] Per-agent branch, lane, and handoff are visible in one status view
+- [ ] Recovery path for a failed or rate-limited agent run
 
-- [ ] CMake presets (`windows-debug`, `windows-release`) and C++23
-- [ ] SDL3 window, resize, clean shutdown, ESC quit
-- [ ] Fixed-timestep loop with interpolation
-- [ ] Input snapshot and action mapping
-- [ ] OpenGL context + glad + debug callback
-- [ ] Clear color and one textured quad / sprite
-- [ ] Catch2 + CTest with one real test
-- [ ] Smoke test: boot -> draw -> quit
+**Acceptance:** a fresh clone can attach to an unrelated repository, run two agents in parallel, and merge both without a lane violation.
 
-**Acceptance:** clean clone configures, builds, tests, and shows a window with a sprite; ESC quits cleanly.
+## Phase 2 — Reliable free models
 
-## Phase 2 — Core mechanic
+- [ ] `npm run check-models` passes on the default roster
+- [ ] Automatic fallback to `openrouter/free` when a model is unavailable
+- [ ] A failed tool call is retried once with a shorter prompt, then reported
+- [ ] Model assignments are easy to swap per role
 
-Owner: `gameplay` + `designer` + `renderer`
+**Acceptance:** a full fanout run completes on free models without manual retries.
 
-- [ ] One player verb with input buffering
-- [ ] One obstacle/enemy
-- [ ] Collision and fail state
-- [ ] One win condition
-- [ ] One level/arena loaded from data
-- [ ] Placeholder art/audio
-- [ ] Playable in under 10 seconds of explanation
+## Phase 3 — Review and integration
 
-**Acceptance:** a first-time player can understand the goal, act, fail, retry, and win.
+- [ ] `npm run worktree -- merge` runs the project's build and tests before merging
+- [ ] Reviewer agent produces a structured verdict on a diff
+- [ ] Merge queue: one branch at a time, rebuild after each
+- [ ] Conflict ownership is routed automatically to the file owner
 
-## Phase 3 — Feel and feedback
+**Acceptance:** two agents change different lanes; both merge; the project still builds.
 
-Owner: `gameplay` + `audio` + `renderer`
+## Phase 4 — Adoption
 
-- [ ] Hitstop / screen shake / particles
-- [ ] SFX for every meaningful action
-- [ ] Music loop with fade
-- [ ] Camera polish
-- [ ] Pause/resume, focus-loss handling
-- [ ] Options: volumes, screen shake toggle
+- [ ] `examples/game/` shows a complete C++/SDL3 mapping
+- [ ] `examples/web/` shows a TypeScript mapping
+- [ ] Templates for a new lane map (`damm.config.json`)
+- [ ] Video/GIF quick start in the README
+- [ ] At least one external project using the kit
 
-**Acceptance:** the same mechanic feels materially better; no new crashes or hitches.
+**Acceptance:** someone who has never seen DAMM can attach it to their repo and get a merged agent PR in under 15 minutes.
 
-## Phase 4 — Content and tools
+## Phase 5 — Distribution
 
-Owner: `tools` + `designer` + `gameplay`
+- [ ] `npx damm attach` style entry point
+- [ ] Versioned kit with a changelog
+- [ ] Upgrade path that preserves local lane edits
+- [ ] Community gallery of lane maps
 
-- [ ] Level/data format + compiler
-- [ ] Atlas packer
-- [ ] Hot reload for data/assets
-- [ ] 3–5 levels or encounters
-- [ ] Save/load with versioning
-
-**Acceptance:** a designer can add a level without touching C++; content loads deterministically.
-
-## Phase 5 — Performance and release
-
-Owner: `performance` + `qa` + `docs`
-
-- [ ] Frame budget met on target hardware
-- [ ] ASan/UBSan clean
-- [ ] Save compatibility tested
-- [ ] Packaging and launch from a clean machine
-- [ ] Credits/licenses complete
-- [ ] Known issues documented
-
-**Acceptance:** a stranger can install, launch, play, and quit without a crash; performance is within budget.
+**Acceptance:** upgrading the kit does not overwrite a project's `damm.config.json`.
 
 ## Next action
 
-1. Human: paste the OpenRouter key into `.env.local` and run `/connect`.
-2. Director: run `npm run doctor`, then `npm run check-models`.
-3. Director: fill `docs/design/GDD.md` with the human.
-4. Director: create `engine-architect`, `renderer`, and `gameplay` worktrees for Phase 1.
+1. Human: add `OPENROUTER_API_KEY` to `.env.local` and run `npm run check-models`.
+2. Director: run `npm run setup`, then `npm run doctor`.
+3. Director: attach DAMM to one real project and open two worktrees.
+4. Director: run the first fanout with `--dry-run`, then for real with two agents.
+
+The live task list is the issue tracker. This file records direction, not every ticket.

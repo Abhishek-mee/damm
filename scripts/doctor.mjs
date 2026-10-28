@@ -10,7 +10,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { OWNERSHIP } from './ownership.mjs';
+import { activeContext, readLocal } from './context.mjs';
+import { kitState } from './kit.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const problems = [];
@@ -73,16 +74,46 @@ const npm = fs.existsSync(npmCli)
   ? command(process.execPath, [npmCli, '--version'])
   : command(process.platform === 'win32' ? 'npm.cmd' : 'npm');
 line('npm', npm || 'not found', npm ? 'ok' : 'warn');
-if (!npm) notes.push('npm was not found on PATH; the game build will use CMake directly.');
+if (!npm) notes.push('npm was not found on PATH; run the scripts with "node scripts/<name>.mjs" instead.');
 
 const gitVersion = command('git');
 line('git', gitVersion || 'not found', gitVersion ? 'ok' : 'fail');
 if (!gitVersion) problems.push('git is required for worktrees.');
 
+const opencode = command(process.platform === 'win32' ? 'opencode.cmd' : 'opencode', ['--version']);
+line('opencode', opencode || 'not found', opencode ? 'ok' : 'warn');
+if (!opencode) {
+  notes.push('The opencode CLI is not on PATH. The interactive app works without it; `npm run fanout --run` needs it.');
+}
+
 const isRepo = git(['rev-parse', '--is-inside-work-tree'])?.status === 0;
 if (!isRepo) {
   line('repository', 'not a git repository', 'fail');
   problems.push('Run this from the DAMM git checkout.');
+}
+
+section('Workspace');
+let context = null;
+try {
+  context = activeContext();
+  line('mode', context.mode, 'ok');
+  line('project', context.project, 'ok');
+  line('base branch', context.baseBranch, 'ok');
+  line('worktrees', context.worktreeRoot, 'ok');
+  line('config', context.source, 'ok');
+
+  if (context.mode === 'attached') {
+    const state = kitState(context.project);
+    line('agent kit', state ? `v${state.version}` : 'not installed', state ? 'ok' : 'warn');
+    if (!state) notes.push('The attached project has no agent kit. Re-run: npm run attach -- <project>');
+  }
+} catch (error) {
+  line('workspace', error.message, 'fail');
+  problems.push(error.message);
+}
+
+if (exists('damm.local.json') && readLocal()?.project) {
+  notes.push('damm.local.json is active. "npm run detach" returns DAMM to its own repository.');
 }
 
 section('Checkout');
@@ -92,15 +123,18 @@ if (isRepo) {
   const dirty = git(['status', '--porcelain'], true).stdout.trim();
   const remote = git(['remote', 'get-url', 'origin'], true);
 
-  line('branch', branch || 'unborn', branch === 'main' ? 'ok' : 'warn');
+  const onBase = context ? branch === context.baseBranch : branch === 'main';
+  line('branch', branch || 'unborn', onBase ? 'ok' : 'warn');
   line('commit', commit.status === 0 ? commit.stdout.trim() : 'no commits yet', commit.status === 0 ? 'ok' : 'warn');
   line('worktree', dirty ? `${dirty.split(/\r?\n/).length} uncommitted change(s)` : 'clean', dirty ? 'warn' : 'ok');
   line('remote', remote.status === 0 ? remote.stdout.trim() : 'none', remote.status === 0 ? 'ok' : 'warn');
 
-  if (branch !== 'main' && branch !== '') {
-    notes.push(`This checkout is on "${branch}". The main control plane should be on main; agents belong in their worktrees.`);
+  if (!onBase && branch !== '') {
+    notes.push(
+      `This checkout is on "${branch}". The control plane should be on "${context?.baseBranch ?? 'main'}"; agents belong in their worktrees.`,
+    );
   }
-  if (dirty) notes.push('Commit the setup baseline before creating worktrees; `new` refuses to run on a dirty main checkout.');
+  if (dirty) notes.push('Commit the baseline before creating worktrees; `new` refuses to run on a dirty main checkout.');
 }
 
 section('Roster');
@@ -120,7 +154,7 @@ line('skills', String(skillDirs.length), skillDirs.length === 17 ? 'ok' : 'warn'
 
 const missingLanes = agentFiles
   .map((file) => file.slice(0, -3))
-  .filter((name) => !OWNERSHIP[name]);
+  .filter((name) => !(context?.ownership ?? {})[name]);
 if (missingLanes.length > 0) {
   problems.push(`Agents without ownership lanes: ${missingLanes.join(', ')}`);
 }
@@ -144,26 +178,17 @@ if (!exists('.env.local')) {
   const env = read('.env.local');
   const key = env.match(/^OPENROUTER_API_KEY=(.*)$/m)?.[1]?.trim() ?? '';
   const looksValid = key.startsWith('sk-or-v1-') && key.length >= 40;
-  line('OPENROUTER_API_KEY', key.length === 0 ? 'empty' : looksValid ? 'set' : 'set (unexpected format)', key.length === 0 ? 'warn' : looksValid ? 'ok' : 'warn');
+  line(
+    'OPENROUTER_API_KEY',
+    key.length === 0 ? 'empty' : looksValid ? 'set' : 'set (unexpected format)',
+    key.length === 0 ? 'warn' : looksValid ? 'ok' : 'warn',
+  );
   if (key.length === 0) notes.push('Paste the OpenRouter key into .env.local; `npm run check-models` will test every assigned model.');
   else if (!looksValid) notes.push('The key does not look like an OpenRouter key (expected sk-or-v1-...). Double-check it.');
 }
 
-section('Toolchain (needed from Phase 1)');
-for (const [name, args] of [
-  ['cmake', ['--version']],
-  ['ninja', ['--version']],
-  ['clang++', ['--version']],
-  ['g++', ['--version']],
-  ['cl', []],
-]) {
-  const version = command(name, args);
-  const optional = name !== 'cmake';
-  line(name, version || 'not found', version ? 'ok' : optional ? 'warn' : 'warn');
-}
-
 section('Worktrees');
-if (isRepo) {
+if (isRepo && context) {
   const porcelain = git(['worktree', 'list', '--porcelain'], true).stdout;
   const worktrees = [];
   let current = null;
@@ -187,10 +212,14 @@ if (isRepo) {
   const missing = agents.filter((agent) => !present.has(agent));
 
   line('total worktrees', String(worktrees.length), worktrees.length > 1 ? 'ok' : 'warn');
-  line('agent worktrees', `${present.size}/${agents.length}`, missing.length === 0 ? 'ok' : 'warn');
+  line(
+    'agent worktrees',
+    `${agents.length - missing.length}/${agents.length}`,
+    missing.length === 0 ? 'ok' : 'warn',
+  );
   if (missing.length > 0) {
-    notes.push(`Missing worktrees: ${missing.join(', ')}. Run \`npm run worktree -- bootstrap\` after the baseline commit.`);
-    next.push('Commit the baseline, then run: npm run worktree -- bootstrap');
+    notes.push(`Missing worktrees: ${missing.join(', ')}.`);
+    next.push('Create the ones you need: npm run worktree -- new <agent>');
   } else {
     next.push('Open the worktree for your next slice and select its agent in OpenCode.');
   }

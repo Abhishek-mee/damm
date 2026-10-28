@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title desc">
+  <title id="title">DAMM — a multi-agent software studio</title>
+  <desc id="desc">Dark banner with an isometric cube, the DAMM wordmark, and the stack: OpenCode, git worktrees, ownership lanes, free models, any stack. Eleven agents, seventeen skills, one lane each.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070b12"/>
+      <stop offset="0.55" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#101827"/>
+    </linearGradient>
+    <radialGradient id="warmGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="coolGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accentLine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f59e0b"/>
+      <stop offset="0.55" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="topFace" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbbf24" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#f59e0b" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="leftFace" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#f59e0b" stop-opacity="0.03"/>
+    </linearGradient>
+    <linearGradient id="rightFace" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0.04"/>
+    </linearGradient>
+    <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M64 0H0V64" fill="none" stroke="#94a3b8" stroke-opacity="0.07" stroke-width="1"/>
+    </pattern>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <clipPath id="frame">
+      <rect x="0" y="0" width="1280" height="360" rx="0"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="1280" height="360" fill="url(#bg)"/>
+    <rect width="1280" height="360" fill="url(#grid)"/>
+    <circle cx="150" cy="180" r="250" fill="url(#warmGlow)"/>
+    <circle cx="1110" cy="170" r="270" fill="url(#coolGlow)"/>
+    <rect x="0" y="0" width="1280" height="3" fill="url(#accentLine)"/>
+
+    <!-- Isometric mark: one workspace built from primitives -->
+    <g filter="url(#softGlow)">
+      <ellipse cx="150" cy="192" rx="132" ry="48" fill="none" stroke="#22d3ee" stroke-opacity="0.28" stroke-width="1.5" transform="rotate(-18 150 192)"/>
+      <ellipse cx="150" cy="192" rx="104" ry="34" fill="none" stroke="#f59e0b" stroke-opacity="0.22" stroke-width="1.2" transform="rotate(-18 150 192)"/>
+      <circle cx="31" cy="157" r="4" fill="#22d3ee"/>
+      <circle cx="263" cy="220" r="4" fill="#fbbf24"/>
+      <polygon points="150,103 227,148 150,193 73,148" fill="url(#topFace)" stroke="#fbbf24" stroke-width="2.5" stroke-linejoin="round"/>
+      <polygon points="73,148 150,193 150,282 73,237" fill="url(#leftFace)" stroke="#f59e0b" stroke-width="2.5" stroke-linejoin="round"/>
+      <polygon points="227,148 150,193 150,282 227,237" fill="url(#rightFace)" stroke="#22d3ee" stroke-width="2.5" stroke-linejoin="round"/>
+      <polygon points="150,193 150,282" fill="none" stroke="#e2e8f0" stroke-opacity="0.5" stroke-width="1.4"/>
+      <polygon points="150,128 181,146 150,164 119,146" fill="#070b12" fill-opacity="0.72" stroke="#fde68a" stroke-opacity="0.55" stroke-width="1.2"/>
+      <polygon points="150,146 168,156 150,166 132,156" fill="none" stroke="#22d3ee" stroke-opacity="0.9" stroke-width="1.4"/>
+    </g>
+
+    <!-- Wordmark -->
+    <g font-family="Segoe UI, Inter, system-ui, -apple-system, sans-serif">
+      <text x="320" y="188" fill="#f8fafc" font-size="104" font-weight="800" letter-spacing="2">DAMM</text>
+      <text x="324" y="228" fill="#94a3b8" font-size="19" font-weight="600" letter-spacing="4.6">A MULTI-AGENT SOFTWARE STUDIO</text>
+
+      <!-- Stack chips -->
+      <g font-family="Cascadia Code, SFMono-Regular, Consolas, monospace" font-size="15" font-weight="600">
+        <rect x="323" y="258" width="124" height="36" rx="18" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-opacity="0.40"/>
+        <text x="385" y="281" text-anchor="middle" fill="#c4b5fd">OPENCODE</text>
+
+        <rect x="459" y="258" width="128" height="36" rx="18" fill="#22d3ee" fill-opacity="0.10" stroke="#22d3ee" stroke-opacity="0.40"/>
+        <text x="523" y="281" text-anchor="middle" fill="#67e8f9">WORKTREES</text>
+
+        <rect x="599" y="258" width="160" height="36" rx="18" fill="#f59e0b" fill-opacity="0.12" stroke="#f59e0b" stroke-opacity="0.45"/>
+        <text x="679" y="281" text-anchor="middle" fill="#fbbf24">OWNERSHIP LANES</text>
+
+        <rect x="771" y="258" width="146" height="36" rx="18" fill="#34d399" fill-opacity="0.10" stroke="#34d399" stroke-opacity="0.40"/>
+        <text x="844" y="281" text-anchor="middle" fill="#6ee7b7">FREE MODELS</text>
+
+        <rect x="929" y="258" width="116" height="36" rx="18" fill="#38bdf8" fill-opacity="0.10" stroke="#38bdf8" stroke-opacity="0.40"/>
+        <text x="987" y="281" text-anchor="middle" fill="#7dd3fc">ANY STACK</text>
+      </g>
+
+      <text x="324" y="330" fill="#64748b" font-size="14" font-weight="600" letter-spacing="2.4">11 AGENTS · 17 SKILLS · 1 LANE EACH · MIT</text>
+    </g>
+
+    <!-- Agent constellation: one isolated node per specialist -->
+    <g transform="translate(1100 180)">
+      <circle r="132" fill="none" stroke="#22d3ee" stroke-opacity="0.13" stroke-width="1"/>
+      <circle r="96" fill="none" stroke="#f59e0b" stroke-opacity="0.13" stroke-width="1"/>
+      <g stroke="#94a3b8" stroke-opacity="0.22" stroke-width="1">
+        <line x1="0" y1="0" x2="0" y2="-96"/>
+        <line x1="0" y1="0" x2="73" y2="-62"/>
+        <line x1="0" y1="0" x2="112" y2="0"/>
+        <line x1="0" y1="0" x2="84" y2="48"/>
+        <line x1="0" y1="0" x2="40" y2="87"/>
+        <line x1="0" y1="0" x2="-16" y2="95"/>
+        <line x1="0" y1="0" x2="-72" y2="63"/>
+        <line x1="0" y1="0" x2="-112" y2="0"/>
+        <line x1="0" y1="0" x2="-84" y2="-48"/>
+        <line x1="0" y1="0" x2="-40" y2="-87"/>
+        <line x1="0" y1="0" x2="42" y2="-88"/>
+      </g>
+      <g fill="#22d3ee">
+        <circle cx="0" cy="-96" r="5"/>
+        <circle cx="112" cy="0" r="4"/>
+        <circle cx="-112" cy="0" r="4"/>
+        <circle cx="40" cy="87" r="4"/>
+      </g>
+      <g fill="#fbbf24">
+        <circle cx="73" cy="-62" r="4"/>
+        <circle cx="84" cy="48" r="4"/>
+        <circle cx="-72" cy="63" r="4"/>
+        <circle cx="-40" cy="-87" r="4"/>
+      </g>
+      <g fill="#e2e8f0" fill-opacity="0.75">
+        <circle cx="-16" cy="95" r="4"/>
+        <circle cx="-84" cy="-48" r="4"/>
+        <circle cx="42" cy="-88" r="4"/>
+      </g>
+      <polygon points="0,-38 33,-19 33,19 0,38 -33,19 -33,-19" fill="#0b1220" stroke="#f59e0b" stroke-width="1.6"/>
+      <text x="0" y="-6" text-anchor="middle" fill="#f8fafc" font-family="Segoe UI, system-ui, sans-serif" font-size="20" font-weight="800">11</text>
+      <text x="0" y="13" text-anchor="middle" fill="#94a3b8" font-family="Cascadia Code, Consolas, monospace" font-size="8" letter-spacing="1.4">AGENTS</text>
+    </g>
+  </g>
+</svg>

@@ -1,14 +1,42 @@
 {
-  "name": "damm-agents",
-  "version": "0.1.0",
+  "name": "damm",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Agent workspace for DAMM, a no-engine C++/SDL3/OpenGL game.",
+  "description": "DAMM — a multi-agent software studio. Eleven specialist agents, isolated git worktrees, ownership lanes, and free OpenRouter models.",
+  "license": "MIT",
+  "author": "DAMM contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abhishek-mee/damm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Abhishek-mee/damm/issues"
+  },
+  "homepage": "https://github.com/Abhishek-mee/damm#readme",
+  "keywords": [
+    "ai-agents",
+    "multi-agent",
+    "agent-orchestration",
+    "parallel-agents",
+    "opencode",
+    "git-worktree",
+    "developer-tools",
+    "code-review",
+    "free-models",
+    "openrouter"
+  ],
   "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "setup:worktrees": "node scripts/setup.mjs --worktrees",
+    "attach": "node scripts/attach.mjs",
+    "detach": "node scripts/attach.mjs --detach",
+    "fanout": "node scripts/fanout.mjs",
     "doctor": "node scripts/doctor.mjs",
     "validate": "node scripts/validate.mjs",
     "check-models": "node scripts/check-models.mjs",
-    "worktree": "node scripts/worktree.mjs"
+    "worktree": "node scripts/worktree.mjs",
+    "new": "node scripts/worktree.mjs new"
   },
   "engines": {
     "node": ">=20"

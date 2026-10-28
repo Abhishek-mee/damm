@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Abhishek-mee/damm/damm.schema.json",
+  "title": "DAMM workspace configuration",
+  "description": "Agent roster lanes and worktree location for a DAMM workspace.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "worktreeRoot", "agents"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1,
+      "description": "Configuration format version."
+    },
+    "worktreeRoot": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Worktree directory, relative to the repository root or absolute."
+    },
+    "agents": {
+      "type": "object",
+      "description": "One ownership lane per agent. An empty lane means read-only.",
+      "minProperties": 1,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

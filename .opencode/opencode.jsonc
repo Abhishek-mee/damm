@@ -7,7 +7,7 @@
   "model": "openrouter/thinkingmachines/inkling:free",
   "default_agent": "director",
 
-  "instructions": ["AGENTS.md", "docs/WORKTREES.md", "docs/CPP_STACK.md"],
+  "instructions": ["AGENTS.md", "docs/WORKTREES.md"],
 
   "permissions": [
     // Keys and credentials are never readable or writable by agents.

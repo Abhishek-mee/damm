@@ -1,6 +1,6 @@
 ---
 name: TDD Workflow
-description: Write a failing C++ test first, implement the smallest change to pass, then refactor with evidence. Use when adding gameplay behavior, fixing a bug, or changing a deterministic system.
+description: Write a failing test first, implement the smallest change to pass, then refactor with evidence. Use when adding behavior, fixing a bug, or changing a deterministic system.
 metadata:
   origin: DAMM
 ---
@@ -10,8 +10,8 @@ metadata:
 ## Cycle
 
 ```text
-RED    -> write one failing test for one behavior
-GREEN  -> smallest implementation that passes
+RED      -> write one failing test for one behavior
+GREEN    -> smallest implementation that passes
 REFACTOR -> clean up with tests still green
 ```
 
@@ -21,41 +21,41 @@ Do not write a batch of tests and a batch of code. One behavior at a time.
 
 Before writing the test, identify the seam:
 
-- pure function (math, collision, damage)
-- system update with an injected world/input/clock
-- parser with a string/file buffer
+- pure function (parsing, math, validation)
 - state machine with explicit transitions
+- service with an injected clock, repository, or client
+- HTTP handler with a request/response contract
+- component with a rendered output or accessible role
 
 If there is no seam, the design is too coupled. Fix the seam first, not the test.
 
 ## Example
 
-```cpp
-TEST_CASE("player loses one health when hit", "[gameplay]") {
-  Player p{.health = 3};
-  apply_damage(p, 1);
-  REQUIRE(p.health == 2);
-}
+```ts
+it('rejects an expired token', () => {
+  const token = issue({ expiresAt: new Date('2026-01-01') });
+  expect(verify(token, new Date('2026-01-02'))).toEqual({ ok: false, reason: 'expired' });
+});
 ```
 
-Then implement `apply_damage`. Then add the edge case:
+Then implement. Then add the boundary case:
 
-```cpp
-TEST_CASE("damage does not go below zero", "[gameplay]") {
-  Player p{.health = 1};
-  apply_damage(p, 5);
-  REQUIRE(p.health == 0);
-}
+```ts
+it('accepts a token at its exact expiry instant', () => {
+  const token = issue({ expiresAt: new Date('2026-01-01T00:00:00Z') });
+  expect(verify(token, new Date('2026-01-01T00:00:00Z')).ok).toBe(true);
+});
 ```
 
-## Game-specific rules
+## Rules
 
-- Fixed steps, deterministic seed, no wall clock.
-- Test the rule, not the renderer/audio device.
-- For collision, test corners, touching edges, high speed, and overlap.
-- For saves, test round-trip, version mismatch, truncated file, and bad lengths.
-- For state machines, test allowed and forbidden transitions.
-- For input, test buffering and edge state per step.
+- Control time, randomness, network, and filesystem.
+- Test public behavior, not private helpers.
+- Every bug fix starts with a test that fails for the right reason.
+- One assertion concept per test; multiple assertions are fine when they describe one behavior.
+- No sleeps for synchronization. Use events or a fake clock.
+- No random tests without a seed.
+- A flaky test is a bug; fix or quarantine it with an owner.
 
 ## Evidence
 
@@ -71,19 +71,18 @@ A test that has never failed is not evidence.
 
 ## Coverage
 
-- 80%+ on core logic (math, collision, state, saves).
-- 100% on security-sensitive parsers' rejection paths.
+- High coverage on domain rules, parsers, auth, and money.
+- 100% on security-sensitive rejection paths.
 - Do not chase coverage on glue code or generated code.
-- Do not test private implementation details.
+- Do not test implementation details.
 
 ## Anti-patterns
 
 - Writing the implementation first, then a test that mirrors it.
 - Asserting on logs instead of state.
-- Sleeping for time instead of injecting a clock.
-- Random tests without a seed.
+- Mocking the thing you are trying to verify.
 - Disabling a flaky test instead of fixing the nondeterminism.
-- Testing OpenGL calls directly.
+- Testing a framework or a database driver.
 
 ## Handoff
 

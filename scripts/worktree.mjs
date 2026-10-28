@@ -4,12 +4,19 @@
  *
  * One agent = one worktree = one branch = one ownership lane.
  * The main checkout is the control plane and is never edited by agents.
+ *
+ * Works in this repository (self mode) and in a project attached with
+ * `npm run attach` (attached mode). The active project comes from
+ * scripts/context.mjs.
  */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { OWNERSHIP, laneViolations } from './ownership.mjs';
+import { fileURLToPath } from 'node:url';
+import { ROOT, laneViolations } from './ownership.mjs';
+import { activeContext } from './context.mjs';
+import { installKit, printKitResult } from './kit.mjs';
 
 function runGit(args, cwd, allowFailure = false) {
   const result = spawnSync('git', args, {
@@ -34,12 +41,8 @@ function normalize(filePath) {
   return path.resolve(filePath).replace(/\\/g, '/');
 }
 
-function repoRoot() {
-  return normalize(runGit(['rev-parse', '--show-toplevel'], process.cwd()).stdout.trim());
-}
-
-function readWorktrees() {
-  const raw = runGit(['worktree', 'list', '--porcelain'], process.cwd()).stdout;
+function readWorktrees(repo) {
+  const raw = runGit(['worktree', 'list', '--porcelain'], repo).stdout;
   const entries = [];
   let current = null;
 
@@ -58,24 +61,20 @@ function readWorktrees() {
   return entries;
 }
 
-function findMain(entries) {
-  const main = entries.find((entry) => entry.branch === 'refs/heads/main');
-  if (!main) {
-    throw new Error('No worktree is checked out on branch "main". Restore the main checkout first.');
-  }
-  return main;
+function findMain(entries, context) {
+  const project = normalize(context.project);
+  const main = entries.find((entry) => entry.path === project);
+  if (main) return main;
+
+  const fallback = entries.find((entry) => entry.branch === `refs/heads/${context.baseBranch}`);
+  if (fallback) return fallback;
+
+  throw new Error(`No worktree found for the project at ${context.project}.`);
 }
 
-function worktreeRoot(mainPath) {
-  if (process.env.DAMM_WORKTREE_DIR) {
-    return path.resolve(process.env.DAMM_WORKTREE_DIR);
-  }
-  return path.join(path.dirname(mainPath), `${path.basename(mainPath)}-worktrees`);
-}
-
-function agentNames(mainPath) {
-  const directory = path.join(mainPath, '.opencode', 'agents');
-  if (!fs.existsSync(directory)) return Object.keys(OWNERSHIP);
+function agentNames() {
+  const directory = path.join(ROOT, '.opencode', 'agents');
+  if (!fs.existsSync(directory)) return [];
   return fs
     .readdirSync(directory)
     .filter((name) => name.endsWith('.md'))
@@ -99,14 +98,14 @@ function splitNul(value) {
     .filter(Boolean);
 }
 
-function changedFiles(worktreePath) {
+function changedFiles(worktreePath, baseBranch) {
   const files = new Set();
 
   for (const args of [
     ['diff', '--name-only', '-z'],
     ['diff', '--cached', '--name-only', '-z'],
     ['ls-files', '--others', '--exclude-standard', '-z'],
-    ['diff', '--name-only', '-z', 'main...HEAD'],
+    ['diff', '--name-only', '-z', `${baseBranch}...HEAD`],
   ]) {
     const result = runGit(args, worktreePath, true);
     for (const file of splitNul(result.stdout)) files.add(file);
@@ -116,15 +115,23 @@ function changedFiles(worktreePath) {
   return [...files].sort();
 }
 
-function laneCheck(agent, files) {
-  return laneViolations(agent, files);
-}
-
-function copyLocalEnv(mainPath, worktreePath) {
-  const source = path.join(mainPath, '.env.local');
+function copyLocalEnv(context, worktreePath) {
+  const source = path.join(context.project, '.env.local');
   if (!fs.existsSync(source)) return false;
   fs.copyFileSync(source, path.join(worktreePath, '.env.local'));
   return true;
+}
+
+function installKitIfNeeded(context, worktreePath) {
+  if (context.mode !== 'attached') return null;
+  return installKit(worktreePath, { exclude: context.excludeKit });
+}
+
+function printContext(context) {
+  console.log(`Mode:      ${context.mode}${context.mode === 'attached' ? ` (${context.source})` : ''}`);
+  console.log(`Project:   ${context.project}`);
+  console.log(`Base:      ${context.baseBranch}`);
+  console.log(`Worktrees: ${context.worktreeRoot}`);
 }
 
 function printHelp() {
@@ -133,46 +140,51 @@ function printHelp() {
 Usage:
   node scripts/worktree.mjs list
   node scripts/worktree.mjs status
-  node scripts/worktree.mjs bootstrap
   node scripts/worktree.mjs new <agent>
+  node scripts/worktree.mjs bootstrap
   node scripts/worktree.mjs check <agent>
-  node scripts/worktree.mjs merge <agent>
+  node scripts/worktree.mjs merge <agent> [--skip-tests]
   node scripts/worktree.mjs remove <agent> [--force]
   node scripts/worktree.mjs sync-env
 
-Agents: ${Object.keys(OWNERSHIP).join(', ')}
+Agents: ${Object.keys(activeContext().ownership).join(', ')}
 
 The main checkout is the control plane. Agents work in sibling directories
-under ..\\damm-worktrees\\<agent> on branch agent/<agent>.`);
+under the worktree root on branch agent/<agent>. Attach another project with
+"npm run attach -- <path>".`);
 }
 
 function commandList() {
-  const entries = readWorktrees();
-  const main = findMain(entries);
-  const root = worktreeRoot(main.path);
+  const context = activeContext();
+  const entries = readWorktrees(context.project);
+  const main = findMain(entries, context);
 
+  printContext(context);
   console.log(`Main:      ${main.path}`);
-  console.log(`Worktrees: ${root}`);
   console.log('');
-  console.log('AGENT'.padEnd(20), 'BRANCH'.padEnd(28), 'DIRTY'.padEnd(7), 'PATH');
-  console.log('-'.repeat(96));
+  console.log('AGENT'.padEnd(16), 'BRANCH'.padEnd(24), 'STATE'.padEnd(9), 'PATH');
+  console.log('-'.repeat(92));
 
-  for (const agent of agentNames(main.path)) {
+  for (const agent of agentNames()) {
     const entry = findAgentWorktree(entries, agent);
     if (!entry) {
-      console.log(agent.padEnd(20), `agent/${agent}`.padEnd(28), 'missing'.padEnd(7), path.join(root, agent));
+      console.log(agent.padEnd(16), `agent/${agent}`.padEnd(24), 'missing'.padEnd(9), path.join(context.worktreeRoot, agent));
       continue;
     }
-    const dirty = isDirty(entry.path) ? 'dirty' : 'clean';
-    console.log(agent.padEnd(20), (entry.branch || '').replace('refs/heads/', '').padEnd(28), dirty.padEnd(7), entry.path);
+    const state = isDirty(entry.path) ? 'dirty' : 'clean';
+    console.log(agent.padEnd(16), (entry.branch || '').replace('refs/heads/', '').padEnd(24), state.padEnd(9), entry.path);
   }
 }
 
 function commandStatus() {
-  const entries = readWorktrees();
-  const main = findMain(entries);
+  const context = activeContext();
+  const entries = readWorktrees(context.project);
+  findMain(entries, context);
 
-  for (const agent of agentNames(main.path)) {
+  printContext(context);
+  console.log('');
+
+  for (const agent of agentNames()) {
     const entry = findAgentWorktree(entries, agent);
     if (!entry) {
       console.log(`${agent}: no worktree`);
@@ -181,39 +193,46 @@ function commandStatus() {
 
     const dirty = isDirty(entry.path);
     const last = runGit(['log', '-1', '--pretty=%h %s'], entry.path, true).stdout.trim();
-    const counts = runGit(['rev-list', '--left-right', '--count', 'main...HEAD'], entry.path, true).stdout.trim();
+    const counts = runGit(
+      ['rev-list', '--left-right', '--count', `${context.baseBranch}...HEAD`],
+      entry.path,
+      true,
+    ).stdout.trim();
     const [behind, ahead] = counts.split(/\s+/).map((value) => Number(value) || 0);
     console.log(`${agent}: ${dirty ? 'dirty' : 'clean'} | ahead ${ahead} behind ${behind} | ${last || 'no commits'}`);
     console.log(`  ${entry.path}`);
   }
 }
 
-function commandNew(agent) {
+function ensureWorktree(agent) {
+  const context = activeContext();
   if (!agent) throw new Error('Usage: node scripts/worktree.mjs new <agent>');
-  if (!agentNames(findMain(readWorktrees()).path).includes(agent)) {
+  if (!agentNames().includes(agent)) {
     throw new Error(`Unknown agent "${agent}". Run "node scripts/worktree.mjs list" for the roster.`);
   }
 
-  const entries = readWorktrees();
-  const main = findMain(entries);
-  const root = worktreeRoot(main.path);
-  const worktreePath = path.join(root, agent);
+  const entries = readWorktrees(context.project);
+  const main = findMain(entries, context);
+  const worktreePath = path.join(context.worktreeRoot, agent);
   const branch = `agent/${agent}`;
-
-  if (fs.existsSync(worktreePath)) {
-    throw new Error(`Worktree already exists: ${worktreePath}`);
-  }
 
   const checkedOut = findAgentWorktree(entries, agent);
   if (checkedOut) {
+    if (normalize(checkedOut.path) === normalize(worktreePath)) {
+      return { agent, branch, worktreePath: checkedOut.path, created: false, context };
+    }
     throw new Error(`Branch ${branch} is already checked out at ${checkedOut.path}`);
+  }
+
+  if (fs.existsSync(worktreePath)) {
+    throw new Error(`Worktree path already exists but is not a git worktree: ${worktreePath}`);
   }
 
   if (isDirty(main.path)) {
     throw new Error('The main checkout is dirty. Commit or move those changes before creating a worktree.');
   }
 
-  fs.mkdirSync(root, { recursive: true });
+  fs.mkdirSync(context.worktreeRoot, { recursive: true });
 
   const branchExists =
     runGit(['show-ref', '--verify', '--quiet', `refs/heads/${branch}`], main.path, true).status === 0;
@@ -221,32 +240,44 @@ function commandNew(agent) {
   if (branchExists) {
     runGit(['worktree', 'add', worktreePath, branch], main.path);
   } else {
-    runGit(['worktree', 'add', '-b', branch, worktreePath, 'main'], main.path);
+    runGit(['worktree', 'add', '-b', branch, worktreePath, context.baseBranch], main.path);
   }
 
-  const envCopied = copyLocalEnv(main.path, worktreePath);
+  const envCopied = copyLocalEnv(context, worktreePath);
+  const kit = installKitIfNeeded(context, worktreePath);
+
+  return { agent, branch, worktreePath, created: true, envCopied, kit, context };
+}
+
+function commandNew(agent) {
+  const result = ensureWorktree(agent);
+
+  if (!result.created) {
+    console.log(`${agent} already has a worktree at ${result.worktreePath}`);
+    return;
+  }
 
   console.log(`Created ${agent}`);
-  console.log(`  branch:   ${branch}`);
-  console.log(`  worktree: ${worktreePath}`);
-  console.log(`  env:      ${envCopied ? '.env.local copied' : 'no .env.local found'}`);
+  console.log(`  branch:   ${result.branch}`);
+  console.log(`  worktree: ${result.worktreePath}`);
+  console.log(`  base:     ${result.context.baseBranch}`);
+  console.log(`  env:      ${result.envCopied ? '.env.local copied' : 'no .env.local found'}`);
+  if (result.kit) printKitResult(result.kit);
   console.log('');
   console.log('Open that folder in OpenCode, select this agent, and work there.');
 }
 
 function commandBootstrap() {
-  const entries = readWorktrees();
-  const main = findMain(entries);
-  const root = worktreeRoot(main.path);
+  const context = activeContext();
   const results = [];
 
-  for (const agent of agentNames(main.path)) {
-    if (fs.existsSync(path.join(root, agent))) {
+  for (const agent of agentNames()) {
+    if (fs.existsSync(path.join(context.worktreeRoot, agent))) {
       results.push([agent, 'exists']);
       continue;
     }
     try {
-      commandNew(agent);
+      ensureWorktree(agent);
       results.push([agent, 'created']);
     } catch (error) {
       results.push([agent, `failed: ${error.message}`]);
@@ -254,48 +285,88 @@ function commandBootstrap() {
   }
 
   console.log('\nBootstrap summary');
-  for (const [agent, result] of results) console.log(`  ${agent.padEnd(20)} ${result}`);
+  for (const [agent, result] of results) console.log(`  ${agent.padEnd(16)} ${result}`);
+}
+
+function checkAgent(agent, { quiet = false } = {}) {
+  const context = activeContext();
+  const entries = readWorktrees(context.project);
+  const entry = findAgentWorktree(entries, agent);
+  if (!entry) throw new Error(`No worktree for agent "${agent}". Create it with "new ${agent}".`);
+
+  const files = changedFiles(entry.path, context.baseBranch);
+  const violations = laneViolations(agent, files, context.ownership);
+
+  if (!quiet) {
+    console.log(`Agent:    ${agent}`);
+    console.log(`Branch:   ${(entry.branch || '').replace('refs/heads/', '')}`);
+    console.log(`Worktree: ${entry.path}`);
+    console.log(`Base:     ${context.baseBranch}`);
+    console.log('');
+  }
+
+  if (files.length === 0) {
+    if (!quiet) {
+      console.log('No changes.');
+      console.log('Ownership check: PASS (nothing to check)');
+    }
+    return { ok: true, files, violations, entry };
+  }
+
+  if (!quiet) {
+    for (const file of files) {
+      console.log(`${violations.includes(file) ? 'FAIL' : 'ok  '} ${file}`);
+    }
+    console.log('');
+  }
+
+  if (violations.length > 0) {
+    if (!quiet) {
+      console.log(`Ownership check: FAIL (${violations.length} out-of-lane file${violations.length === 1 ? '' : 's'})`);
+      console.log('Move these changes to the owning agent, or revert them before merging.');
+    }
+    return { ok: false, files, violations, entry };
+  }
+
+  if (!quiet) console.log(`Ownership check: PASS (${files.length} file${files.length === 1 ? '' : 's'})`);
+  return { ok: true, files, violations, entry };
 }
 
 function commandCheck(agent) {
   if (!agent) throw new Error('Usage: node scripts/worktree.mjs check <agent>');
-  const entries = readWorktrees();
-  const entry = findAgentWorktree(entries, agent);
-  if (!entry) throw new Error(`No worktree for agent "${agent}". Create it with "new ${agent}".`);
-
-  const files = changedFiles(entry.path);
-  const violations = laneCheck(agent, files);
-
-  console.log(`Agent:    ${agent}`);
-  console.log(`Branch:   ${(entry.branch || '').replace('refs/heads/', '')}`);
-  console.log(`Worktree: ${entry.path}`);
-  console.log('');
-
-  if (files.length === 0) {
-    console.log('No changes.');
-    console.log('Ownership check: PASS (nothing to check)');
-    return 0;
-  }
-
-  for (const file of files) {
-    console.log(`${violations.includes(file) ? 'FAIL' : 'ok  '} ${file}`);
-  }
-
-  console.log('');
-  if (violations.length > 0) {
-    console.log(`Ownership check: FAIL (${violations.length} out-of-lane file${violations.length === 1 ? '' : 's'})`);
-    console.log('Move these changes to the owning agent, or revert them before merging.');
-    return 1;
-  }
-
-  console.log(`Ownership check: PASS (${files.length} file${files.length === 1 ? '' : 's'})`);
-  return 0;
+  return checkAgent(agent).ok ? 0 : 1;
 }
 
-function commandMerge(agent) {
-  if (!agent) throw new Error('Usage: node scripts/worktree.mjs merge <agent>');
-  const entries = readWorktrees();
-  const main = findMain(entries);
+function projectTestCommand(project) {
+  const packagePath = path.join(project, 'package.json');
+  if (!fs.existsSync(packagePath)) return null;
+  try {
+    const manifest = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    return manifest.scripts?.test ? 'npm test' : null;
+  } catch {
+    return null;
+  }
+}
+
+function runProjectTests(project) {
+  const command = projectTestCommand(project);
+  if (!command) return null;
+  console.log('');
+  console.log(`Running the project test command in ${project} ...`);
+  const result = spawnSync('npm', ['test', '--silent'], {
+    cwd: project,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+    windowsHide: true,
+  });
+  return result.status === 0;
+}
+
+function commandMerge(agent, { skipTests = false } = {}) {
+  if (!agent) throw new Error('Usage: node scripts/worktree.mjs merge <agent> [--skip-tests]');
+  const context = activeContext();
+  const entries = readWorktrees(context.project);
+  const main = findMain(entries, context);
   const entry = findAgentWorktree(entries, agent);
   if (!entry) throw new Error(`No worktree for agent "${agent}".`);
 
@@ -303,22 +374,34 @@ function commandMerge(agent) {
     throw new Error(`Worktree is dirty: ${entry.path}. Commit or stash before merging.`);
   }
 
-  const checkStatus = commandCheck(agent);
-  if (checkStatus !== 0) {
+  const check = checkAgent(agent);
+  if (!check.ok) {
     throw new Error(`Ownership check failed for ${agent}. Merge aborted.`);
   }
 
-  const validate = spawnSync(process.execPath, [path.join(main.path, 'scripts', 'validate.mjs')], {
-    cwd: main.path,
-    stdio: 'inherit',
-    windowsHide: true,
-  });
-  if (validate.status !== 0) {
-    throw new Error('Validation failed. Merge aborted.');
+  if (context.mode === 'self') {
+    const validate = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'validate.mjs')], {
+      cwd: ROOT,
+      stdio: 'inherit',
+      windowsHide: true,
+    });
+    if (validate.status !== 0) {
+      throw new Error('Validation failed. Merge aborted.');
+    }
   }
 
   if (isDirty(main.path)) {
     throw new Error('The main checkout is dirty. Commit or move those changes before merging.');
+  }
+
+  if (skipTests) {
+    console.log('warn project tests skipped (--skip-tests). Run them yourself before pushing.');
+  } else {
+    const tests = runProjectTests(context.project);
+    if (tests === false) {
+      throw new Error('Project tests failed on the base checkout. Merge aborted.');
+    }
+    if (tests === null) console.log('note no "test" script found; skipping the project test run.');
   }
 
   const merge = runGit(
@@ -334,15 +417,16 @@ function commandMerge(agent) {
   }
 
   console.log('');
-  console.log(`Merged agent/${agent} into main.`);
+  console.log(`Merged agent/${agent} into ${context.baseBranch}.`);
   console.log('Next: build, test, then push:');
-  console.log('  git push origin main');
+  console.log(`  git push origin ${context.baseBranch}`);
 }
 
 function commandRemove(agent, force) {
   if (!agent) throw new Error('Usage: node scripts/worktree.mjs remove <agent> [--force]');
-  const entries = readWorktrees();
-  const main = findMain(entries);
+  const context = activeContext();
+  const entries = readWorktrees(context.project);
+  const main = findMain(entries, context);
   const entry = findAgentWorktree(entries, agent);
   if (!entry) throw new Error(`No worktree for agent "${agent}".`);
 
@@ -362,15 +446,16 @@ function commandRemove(agent, force) {
 }
 
 function commandSyncEnv() {
-  const entries = readWorktrees();
-  const main = findMain(entries);
-  const source = path.join(main.path, '.env.local');
+  const context = activeContext();
+  const entries = readWorktrees(context.project);
+  findMain(entries, context);
+  const source = path.join(context.project, '.env.local');
   if (!fs.existsSync(source)) {
-    throw new Error(`No .env.local in ${main.path}. Create it from .env.example first.`);
+    throw new Error(`No .env.local in ${context.project}. Create it from .env.example first.`);
   }
 
   let copied = 0;
-  for (const agent of agentNames(main.path)) {
+  for (const agent of agentNames()) {
     const entry = findAgentWorktree(entries, agent);
     if (!entry) continue;
     fs.copyFileSync(source, path.join(entry.path, '.env.local'));
@@ -378,6 +463,13 @@ function commandSyncEnv() {
     console.log(`synced .env.local -> ${entry.path}`);
   }
   console.log(`Synced ${copied} worktree${copied === 1 ? '' : 's'}.`);
+}
+
+function commandWhere() {
+  const context = activeContext();
+  printContext(context);
+  console.log(`Workspace: ${ROOT}`);
+  console.log(`Agents:    ${agentNames().join(', ')}`);
 }
 
 function main() {
@@ -402,13 +494,16 @@ function main() {
         process.exitCode = commandCheck(args[1]);
         break;
       case 'merge':
-        commandMerge(args[1]);
+        commandMerge(args[1], { skipTests: args.includes('--skip-tests') });
         break;
       case 'remove':
         commandRemove(args[1], args.includes('--force'));
         break;
       case 'sync-env':
         commandSyncEnv();
+        break;
+      case 'where':
+        commandWhere();
         break;
       case 'help':
       case '--help':
@@ -425,4 +520,10 @@ function main() {
   }
 }
 
-main();
+const entryPoint = process.argv[1] ? path.resolve(process.argv[1]) : '';
+const modulePath = path.resolve(fileURLToPath(import.meta.url));
+if (entryPoint.toLowerCase() === modulePath.toLowerCase()) {
+  main();
+}
+
+export { agentNames, checkAgent, ensureWorktree, runGit };

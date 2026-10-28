@@ -1,21 +1,21 @@
 # Agent roster
 
-DAMM uses **11 agents** and **17 skills**. Agents are defined in `.opencode/agents/`; skills live in `.opencode/skills/`.
+DAMM uses **11 agents** and **17 skills**. Agents are defined in `.opencode/agents/`; skills live in `.opencode/skills/`. The ownership lanes live in `damm.config.json`.
 
 The `model` column is the free OpenRouter model assigned to each role. If a model fails the tool-call check, change that one line in the agent file and run `npm run check-models` again.
 
 | Agent | Mode | Model | Primary skills | Ownership lane |
 | --- | --- | --- | --- | --- |
-| `director` | primary | `thinkingmachines/inkling:free` | `project-orchestration`, `game-design-document`, `verification-loop`, `git-worktree-workflow` | `docs/**`, `README.md`, `AGENTS.md`, `.github/**`, notices, license |
-| `engine-architect` | subagent | `nvidia/nemotron-3-ultra-550b-a55b:free` | `low-level-engine-architecture`, `cpp-testing`, `performance-profiling`, `git-worktree-workflow` | `engine/**`, `src/core/**`, `src/platform/**`, `CMakeLists.txt`, `cmake/**`, `third_party/**`, `tests/engine/**` |
-| `renderer` | subagent | `cohere/north-mini-code:free` | `opengl-rendering`, `performance-profiling`, `cpp-testing` | `src/render/**`, `shaders/**`, `assets/shaders/**`, `tests/render/**` |
-| `gameplay` | subagent | `poolside/laguna-s-2.1:free` | `gameplay-systems`, `cpp-testing`, `tdd-workflow` | `src/game/**`, `src/input/**`, `src/physics/**`, `assets/data/**`, `tests/game/**` |
-| `audio` | subagent | `google/gemma-4-31b-it:free` | `game-audio`, `cpp-testing` | `src/audio/**`, `assets/audio/**`, `tests/audio/**` |
-| `tools` | subagent | `poolside/laguna-xs-2.1:free` | `asset-pipeline`, `low-level-engine-architecture`, `cpp-testing` | `tools/**`, `assets/tools/**`, `docs/tools/**` |
-| `designer` | subagent | `google/gemma-4-31b-it:free` | `game-design-document`, `level-design`, `playtest-and-qa` | `docs/design/**`, `assets/design/**`, `data/**` |
-| `qa` | subagent | `nvidia/nemotron-3.5-lightning:free` | `cpp-testing`, `playtest-and-qa`, `verification-loop` | `tests/**`, `docs/qa/**` |
+| `director` | primary | `thinkingmachines/inkling:free` | `project-orchestration`, `product-spec`, `verification-loop`, `git-worktree-workflow` | repo root docs, roadmap, roster, config, CI |
+| `architect` | subagent | `nvidia/nemotron-3-ultra-550b-a55b:free` | `system-architecture`, `testing`, `performance-profiling`, `git-worktree-workflow` | `engine/**`, `src/platform/**`, build files, ADRs |
+| `frontend` | subagent | `cohere/north-mini-code:free` | `frontend-engineering`, `ux-and-flows`, `performance-profiling`, `testing` | `src/frontend/**`, `src/ui/**`, `web/**`, shaders, UI assets |
+| `core` | subagent | `poolside/laguna-s-2.1:free` | `core-systems`, `tdd-workflow`, `testing` | `src/core/**`, `src/domain/**`, `src/services/**`, `src/app/**` |
+| `media` | subagent | `google/gemma-4-31b-it:free` | `media-pipeline`, `testing` | `src/media/**`, media and audio assets |
+| `tools` | subagent | `poolside/laguna-xs-2.1:free` | `developer-tooling`, `system-architecture`, `testing` | CI, scripts, tools, containers, deploy |
+| `designer` | subagent | `google/gemma-4-31b-it:free` | `product-spec`, `ux-and-flows`, `user-testing` | `docs/design/**`, `design/**`, design assets |
+| `qa` | subagent | `nvidia/nemotron-3.5-lightning:free` | `testing`, `user-testing`, `verification-loop` | `tests/e2e/**`, fixtures, helpers, `docs/qa/**` |
 | `reviewer` | subagent | `thinkingmachines/inkling-small:free` | `code-review`, `security-review`, `verification-loop` | Read-only |
-| `performance` | subagent | `nvidia/nemotron-3-super-120b-a12b:free` | `performance-profiling`, `cpp-testing`, `verification-loop` | `benchmarks/**`, `profiling/**`, `docs/perf/**` |
+| `performance` | subagent | `nvidia/nemotron-3-super-120b-a12b:free` | `performance-profiling`, `testing`, `verification-loop` | `benchmarks/**`, `profiling/**`, `docs/perf/**` |
 | `docs` | subagent | `dots-studio/dots-3-note-preview:free` | `documentation`, `git-worktree-workflow` | `docs/**`, `README.md` |
 
 ## Skill matrix
@@ -23,21 +23,21 @@ The `model` column is the free OpenRouter model assigned to each role. If a mode
 | Skill | Used by |
 | --- | --- |
 | `project-orchestration` | director |
-| `game-design-document` | director, designer |
-| `level-design` | designer |
-| `low-level-engine-architecture` | engine-architect, tools |
-| `opengl-rendering` | renderer |
-| `gameplay-systems` | gameplay |
-| `game-audio` | audio |
-| `asset-pipeline` | tools |
-| `cpp-testing` | engine-architect, renderer, gameplay, audio, tools, qa, performance |
-| `tdd-workflow` | gameplay |
-| `performance-profiling` | engine-architect, renderer, performance |
-| `playtest-and-qa` | designer, qa |
+| `product-spec` | director, designer |
+| `ux-and-flows` | frontend, designer |
+| `system-architecture` | architect, tools |
+| `frontend-engineering` | frontend |
+| `core-systems` | core |
+| `media-pipeline` | media |
+| `developer-tooling` | tools |
+| `testing` | architect, frontend, core, media, tools, qa, performance |
+| `tdd-workflow` | core |
+| `performance-profiling` | architect, frontend, performance |
+| `user-testing` | designer, qa |
 | `verification-loop` | director, qa, reviewer, performance |
 | `code-review` | reviewer |
 | `security-review` | reviewer |
-| `git-worktree-workflow` | director, engine-architect, docs |
+| `git-worktree-workflow` | director, architect, docs |
 | `documentation` | docs |
 
 ## Collaboration model
@@ -45,28 +45,27 @@ The `model` column is the free OpenRouter model assigned to each role. If a mode
 ```text
 human
   └── director (scope, roadmap, integration)
-        ├── designer          -> GDD, levels, balance
-        ├── engine-architect  -> CMake, platform, core, ECS
-        ├── renderer          -> OpenGL, shaders, sprites
-        ├── gameplay          -> loop, input, collision, states
-        ├── audio             -> mixer, music, SFX
-        ├── tools             -> asset pipeline, editors
-        ├── qa                -> tests, sanitizers, playtests
-        ├── performance       -> profiling, frame budgets
-        ├── docs              -> README, ADRs, guides
-        └── reviewer          -> read-only review before merge
+        ├── designer     -> spec, flows, usability
+        ├── architect    -> boundaries, platform, build
+        ├── frontend     -> screens, components, rendering
+        ├── core         -> domain rules, state, persistence
+        ├── media        -> audio, video, images, streaming
+        ├── tools        -> CI, scripts, containers, releases
+        ├── qa           -> tests, fixtures, release verification
+        ├── performance  -> benchmarks, profiles, budgets
+        ├── docs         -> README, setup, ADRs, changelog
+        └── reviewer     -> read-only review before merge
 ```
 
-The director does **not** write game code. It defines the next vertical slice, assigns one agent per worktree, and merges through `npm run worktree -- merge`.
+The director does **not** write product code. It defines the next vertical slice, assigns one agent per worktree, and merges through `npm run worktree -- merge`.
 
 ## Adding an agent
 
 1. Create `.opencode/agents/<name>.md`.
 2. Add frontmatter: `description`, `mode`, `model`, `permissions`.
-3. Add a lane to `scripts/ownership.mjs` in `OWNERSHIP`.
-4. Add the lane to `AGENTS.md`.
-5. Add the agent to this table.
-6. Run `npm run validate` and `npm run check-models`.
+3. Add a lane to `damm.config.json` under `agents`.
+4. Add the lane to `AGENTS.md` and this table.
+5. Run `npm run validate` and `npm run check-models`.
 
 ## Adding a skill
 
@@ -85,3 +84,7 @@ model: "openrouter/<vendor>/<model>:free"
 ```
 
 Run `npm run check-models`. A model is only acceptable if the tool-call test passes. The fallback is `openrouter/free`.
+
+## Changing lanes
+
+Lanes are data, not code. Edit `damm.config.json`; the validator, doctor, and worktree checker all read it. Keep the agent's `permissions` block in sync, or validation fails.

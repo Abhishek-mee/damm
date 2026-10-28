@@ -1,0 +1,51 @@
+name: Feature request
+description: Propose a new agent, skill, lane map, or workflow.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: Who is stuck, and what are they doing today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: The smallest change that helps
+      description: One agent, one skill, one script, or one lane.
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - new skill
+        - new agent
+        - lane map for a stack
+        - attach / fanout workflow
+        - documentation
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: evidence
+    attributes:
+      label: How we would know it works
+      description: A command, a test, or an observable result.
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This can be done inside one ownership lane.
+          required: true
+        - label: I am willing to open a pull request.

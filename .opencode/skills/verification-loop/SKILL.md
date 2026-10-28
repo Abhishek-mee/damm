@@ -13,7 +13,7 @@ metadata:
 
 ## Pre-flight
 
-```powershell
+```bash
 git status
 git branch --show-current
 git diff --stat
@@ -25,74 +25,78 @@ git diff --stat
 
 ## Build
 
-Use the configured preset:
+Use the project's documented command:
 
-```powershell
-cmake --preset windows-debug
-cmake --build --preset windows-debug
+```bash
+npm run build
+# or: cmake --build --preset <preset>
+# or: cargo build
 ```
 
-If the preset does not exist yet, use the closest project command and record it. Never claim a build passed without the command and output.
+If the command does not exist yet, use the closest project command and record it. Never claim a build passed without the command and output.
 
 ## Tests
 
-```powershell
-ctest --preset windows-debug --output-on-failure
+```bash
+npm test
+# or: ctest --preset <preset> --output-on-failure
 ```
 
-- Run the relevant test subset first, then the full suite.
-- If a test fails, fix the cause or report it. Do not disable it.
-- For visual/audio changes, run the smoke scenario and describe what you observed.
+- Run the relevant subset first, then the full suite.
+- For a bug fix, show the failing test before the fix and the passing test after.
+- For new behavior, show the test that would fail if the behavior regressed.
 
-## Static checks
+## Static analysis
 
-- `clang-format --dry-run --Werror` on changed C++ files.
-- `clang-tidy` on changed files if the compile database exists.
-- Compiler warnings: no new warnings.
-- Shader compile logs: clean.
+```bash
+npm run lint
+npm run typecheck   # if the project has one
+```
+
+- Treat new warnings as failures.
+- Do not silence a rule to make the change pass.
+- If a tool is unavailable, say which and why.
 
 ## Smoke run
 
-Boot the game, perform the changed behavior, and quit. Check:
+Start the real entry point and use the primary flow once:
 
-- window opens/closes
-- no crash/assert
-- input works
-- resize/alt-tab
-- logs have no new errors
-- memory does not grow every frame (spot check)
+```bash
+npm run dev
+# or: ./build/app --smoke
+```
+
+Record what you saw: the screen, the output, the exit code. A unit test is not a smoke test.
 
 ## Ownership check
 
-```powershell
+```bash
 npm run worktree -- check <agent>
 ```
 
-A lane violation blocks the merge. Fix it before asking for review.
+The check must pass before a merge. If it fails, move the change to the owning agent; do not widen your lane.
 
 ## Evidence report
 
 ```text
-Change: <one sentence>
 Branch: agent/<name>
-Files: <list>
-Build: <command> -> pass/fail
-Tests: <command> -> N passed, M failed
-Static: <command> -> pass/fail
-Smoke: <steps> -> pass/fail
-Ownership: pass/fail
-Known risks: <list>
+Changed: <files>
+Built:   <command> -> pass/fail
+Tested:  <command> -> pass/fail (<N> tests)
+Linted:  <command> -> pass/fail
+Smoke:   <command> -> what you observed
+Lane:    pass/fail
+Risks:   <known gaps>
 ```
 
-## Stop conditions
+## Honesty rules
 
-Stop and report if:
+- A skipped test is not a pass.
+- A build you did not run is not green.
+- A warning you did not read is not harmless.
+- If the environment cannot run something, write the exact error and what a human must do.
+- Never fabricate a command result. A false green costs more than a red.
 
-- the build fails for a reason outside your lane
-- a test failure looks unrelated but is real
-- a model/tool call fails twice
-- you cannot verify the behavior
-- a secret appears in output
-- you need to edit another lane
+## Handoff
 
-Never fabricate evidence. A false pass is worse than an honest blocker.
+End the task with the evidence report and one concrete next step.

@@ -1,0 +1,75 @@
+name: Bug report
+description: Something in the workspace, an agent, a skill, or a script does not work.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste an API key, token, or private path. Redact logs before posting.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The observable failure.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. npm run setup
+        2. npm run attach -- ../my-project
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version
+      placeholder: main at a15a16d
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: Windows 11, Node 22.11, git 2.47, OpenCode 2.x
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - setup / doctor
+        - attach / detach
+        - worktree / merge
+        - fanout
+        - an agent prompt
+        - a skill
+        - validation / CI
+        - documentation
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Redact keys and absolute user paths.
+      render: text
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety
+      options:
+        - label: I removed all keys, tokens, and private paths from this report.
+          required: true

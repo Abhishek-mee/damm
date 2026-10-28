@@ -4,6 +4,11 @@
 !.env.example
 !.env.local.example
 
+# Local DAMM state
+damm.local.json
+damm.tasks.json
+.damm/
+
 # Local tooling / generated files
 node_modules/
 dist/

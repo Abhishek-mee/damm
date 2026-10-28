@@ -1,0 +1,86 @@
+{
+  "$schema": "./damm.schema.json",
+  "version": 1,
+  "worktreeRoot": "../damm-worktrees",
+  "agents": {
+    "director": [
+      "README.md",
+      "AGENTS.md",
+      "CONTRIBUTING.md",
+      "CODE_OF_CONDUCT.md",
+      "SECURITY.md",
+      "CHANGELOG.md",
+      "LICENSE",
+      "THIRD_PARTY_NOTICES.md",
+      "damm.config.json",
+      "damm.schema.json",
+      "docs/roadmap.md",
+      "docs/AGENTS.md"
+    ],
+    "architect": [
+      "src/platform/**",
+      "engine/**",
+      "CMakeLists.txt",
+      "CMakePresets.json",
+      "cmake/**",
+      "third_party/**",
+      "tests/architecture/**",
+      "docs/architecture/**",
+      "docs/decisions/**"
+    ],
+    "frontend": [
+      "src/frontend/**",
+      "src/ui/**",
+      "web/**",
+      "shaders/**",
+      "assets/ui/**",
+      "tests/frontend/**"
+    ],
+    "core": [
+      "src/core/**",
+      "src/domain/**",
+      "src/services/**",
+      "src/app/**",
+      "tests/core/**"
+    ],
+    "media": [
+      "src/media/**",
+      "assets/media/**",
+      "assets/audio/**",
+      "tests/media/**"
+    ],
+    "tools": [
+      ".github/**",
+      "scripts/**",
+      "tools/**",
+      "assets/tools/**",
+      "Dockerfile",
+      "Dockerfile.*",
+      "docker/**",
+      "deploy/**",
+      "tests/infra/**",
+      "tests/tools/**"
+    ],
+    "designer": [
+      "docs/design/**",
+      "design/**",
+      "assets/design/**"
+    ],
+    "qa": [
+      "tests/e2e/**",
+      "tests/fixtures/**",
+      "tests/helpers/**",
+      "docs/qa/**"
+    ],
+    "reviewer": [],
+    "performance": [
+      "benchmarks/**",
+      "profiling/**",
+      "docs/perf/**"
+    ],
+    "docs": [
+      "docs/**",
+      "README.md"
+    ]
+  }
+}

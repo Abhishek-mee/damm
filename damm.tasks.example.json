@@ -1,0 +1,18 @@
+{
+  "$comment": "Copy this file to damm.tasks.json and edit it. Dry-run first: npm run fanout -- --tasks damm.tasks.json",
+  "concurrency": 2,
+  "tasks": [
+    {
+      "id": "example-domain-rule",
+      "agent": "core",
+      "prompt": "Add the smallest failing test for the rule described in the linked issue, implement the rule, and keep the change inside src/core and tests/core. Report the red/green evidence.",
+      "verify": "npm test"
+    },
+    {
+      "id": "example-ui-state",
+      "agent": "frontend",
+      "prompt": "Add the empty, loading, and error states to the primary screen. Reuse the existing components and design tokens. Include a keyboard path and a screenshot in the handoff.",
+      "verify": "npm test"
+    }
+  ]
+}

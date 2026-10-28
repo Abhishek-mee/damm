@@ -1,6 +1,6 @@
 ---
 name: Git Worktree Workflow
-description: Isolate each agent in its own git worktree and branch, stay inside an ownership lane, and merge only after checks pass. Use when starting work, syncing main, committing, handing off, or resolving a conflict.
+description: Isolate each agent in its own git worktree and branch, stay inside an ownership lane, and merge only after checks pass. Use when starting work, syncing the base branch, committing, handing off, or resolving a conflict.
 metadata:
   origin: DAMM
 ---
@@ -10,14 +10,14 @@ metadata:
 ## Non-negotiables
 
 - One agent = one worktree = one branch `agent/<name>`.
-- The main checkout is the control plane. Do not code there.
+- The project's main checkout is the control plane. Do not code there.
 - Never edit another agent's worktree.
 - Never force-push a shared branch.
 - Never resolve a conflict by deleting the other side.
 
 ## Start
 
-```powershell
+```bash
 git rev-parse --show-toplevel
 git branch --show-current
 ```
@@ -25,31 +25,38 @@ git branch --show-current
 Expected:
 
 ```text
-D:\hackclub\damm-worktrees\<agent>
+<project-parent>/<project>-worktrees/<agent>
 agent/<agent>
 ```
 
-If you are on `main`, stop and ask the human to open the correct worktree.
+If you are on the base branch (`main` or `master`), stop and ask the human to open the correct worktree.
 
-## Sync with main
+## Sync with the base branch
 
-```powershell
+```bash
 git fetch origin
 git merge origin/main
 ```
 
-Resolve conflicts in your lane. If the conflict is in a file you do not own, ask the owner.
+Replace `main` with the project's base branch. Resolve conflicts in your lane. If the conflict is in a file you do not own, ask the owner.
 
 ## Work
 
-- Read `AGENTS.md` and your agent file.
+- Read `DAMM.md` and your agent file.
 - Load your skills.
 - Stay inside your lane.
 - Build and test before committing.
 
+## Parallel work
+
+- One OpenCode session per worktree.
+- Two to four agents at once is the practical limit for free models.
+- Never let two agents edit the same shared file. Split it or assign an owner.
+- Merge one branch at a time and rebuild after each merge.
+
 ## Commit
 
-```powershell
+```bash
 git status
 git diff
 git add <only your files>
@@ -58,7 +65,7 @@ git commit -m "type(scope): why"
 
 Types: `feat`, `fix`, `perf`, `refactor`, `test`, `docs`, `build`, `chore`.
 
-Good: `fix(collision): prevent tunneling at high speed`
+Good: `fix(auth): reject expired tokens at the boundary`
 Bad: `update files`
 
 Do not commit:
@@ -67,10 +74,11 @@ Do not commit:
 - build output
 - absolute local paths
 - unrelated formatting churn
+- the generated `.opencode/`, `DAMM.md`, or `.damm/` kit
 
 ## Push
 
-```powershell
+```bash
 git push -u origin agent/<agent>
 ```
 
@@ -80,7 +88,7 @@ The human may review the branch on GitHub. Worktree directories are local and ar
 
 ```text
 Branch: agent/<name>
-Worktree: D:\hackclub\damm-worktrees\<name>
+Worktree: <project-parent>/<project>-worktrees/<name>
 Changed: <files>
 Built: <command> -> pass/fail
 Tested: <command> -> pass/fail
@@ -90,26 +98,26 @@ Next: <one step>
 
 ## Integrate
 
-The director runs from any checkout:
+The director runs from the DAMM workspace:
 
-```powershell
+```bash
 npm run worktree -- check <agent>
 npm run worktree -- merge <agent>
 ```
 
-The script finds the main worktree and merges there. It refuses if:
+The script finds the project's main worktree and merges there. It refuses if:
 
 - the agent worktree is dirty
 - the ownership check fails
 - `npm run validate` fails
-- the main checkout is dirty
+- the project's main checkout is dirty
 
 ## Conflict recovery
 
 1. Stop.
 2. Identify the file owner.
 3. Read both intents.
-4. Re-apply the smaller change on top of main.
+4. Re-apply the smaller change on top of the base branch.
 5. Rebuild and retest.
 6. Re-run check + merge.
 
@@ -117,9 +125,9 @@ If unsure, ask the human. A lost commit is worse than a delayed merge.
 
 ## Cleanup
 
-After the merge is on `main` and verified:
+After the merge is on the base branch and verified:
 
-```powershell
+```bash
 npm run worktree -- remove <agent>
 git branch -d agent/<agent>
 git push origin --delete agent/<agent>

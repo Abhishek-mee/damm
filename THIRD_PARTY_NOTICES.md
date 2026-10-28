@@ -14,7 +14,7 @@ The following DAMM skills adapt ECC's workflow patterns:
 - `verification-loop`
 - `code-review`
 - `security-review`
-- `low-level-engine-architecture` (verification and ownership ideas)
+- `system-architecture` (verification and ownership ideas)
 - `git-worktree-workflow` (handoff discipline)
 
 The full ECC license is included at `licenses/ECC-LICENSE.txt`.

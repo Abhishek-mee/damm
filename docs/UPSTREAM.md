@@ -1,13 +1,13 @@
 # Upstream projects
 
-The repos you linked are **references**, not vendored dependencies. This keeps the repo small and avoids license surprises. Add one only when the game needs it, in its own worktree, with an ADR.
+The projects below are **references**, not vendored dependencies. This keeps the workspace small and avoids license surprises. Add one only when your project needs it, in its own worktree, with an ADR.
 
 | Project | License | What it gives DAMM | Status |
 | --- | --- | --- | --- |
 | [ECC](https://github.com/affaan-m/ECC) | MIT | Agent/skill patterns, verification and review workflows | **Adapted** — see `THIRD_PARTY_NOTICES.md` |
 | [graphify](https://github.com/Graphify-Labs/graphify) | Apache-2.0 | File/folder to knowledge graph, wiki, graph queries | Optional; needs Claude/Anthropic today |
 | [memvid](https://github.com/memvid/memvid) | Apache-2.0 | Single-file long-term memory for agents | Optional; not wired yet |
-| [RAG_Techniques](https://github.com/NirDiamant/RAG_Techniques) | Apache-2.0 | RAG patterns for NPC dialogue, lore, tooling | Reference only |
+| [RAG_Techniques](https://github.com/NirDiamant/RAG_Techniques) | Apache-2.0 | RAG patterns for search, dialogue, tooling | Reference only |
 | [langfuse](https://github.com/langfuse/langfuse) | MIT (core) | Tracing, prompt management, evals | Optional; needs keys/Docker |
 | [ragas](https://github.com/vibrantlabsai/ragas) | Apache-2.0 | RAG evaluation metrics | Optional; Python |
 
@@ -29,7 +29,7 @@ If you want the full ECC catalog in a **separate** environment, follow its insta
 npx ecc-universal@2.2.3 install --guided
 ```
 
-Review the target and scope before confirming. ECC supports Claude Code, Codex, Kimi Code, and managed adapters for other harnesses; this project uses its own OpenCode-native agent files.
+Review the target and scope before confirming. ECC supports Claude Code, Codex, Kimi Code, and managed adapters for other harnesses; this workspace uses its own OpenCode-native agent files.
 
 ## graphify
 
@@ -53,29 +53,29 @@ Add `graphify-out/` to `.gitignore` before running. Adapting it to OpenRouter wo
 
 ## memvid
 
-memvid packages content, embeddings, search structures, and metadata into a single file. It is a good fit for persistent agent memory or a codex/lore store.
+memvid packages content, embeddings, search structures, and metadata into a single file. It is a good fit for persistent agent memory or a knowledge store.
 
-It is not wired because the game has no lore or agent memory requirements yet. When it does:
+It is not wired because the workspace has no memory requirement yet. When it does:
 
 - pin a release
-- decide Python or Rust bindings
+- decide the binding (Python or Rust)
 - store the memory file under `data/memory/` (gitignored or LFS)
-- add a worktree and ADR
+- add a worktree and an ADR
 
 ## RAG_Techniques
 
 A notebook collection of RAG patterns: chunking, hybrid search, reranking, query translation, evaluation.
 
-Use it as a **reference for design**, not as a runtime dependency. If an NPC dialogue system needs RAG:
+Use it as a **reference for design**, not as a runtime dependency. If your product adds retrieval:
 
 1. write the retrieval design in `docs/design/`
-2. keep the runtime C++ and the offline indexing tool separate
+2. keep the runtime and the offline indexing tool separate
 3. evaluate with ragas before shipping
 4. do not copy notebook code without checking its license and quality
 
 ## langfuse
 
-Langfuse traces LLM calls, prompts, and evaluations. Useful if DAMM adds AI-driven NPCs, a level generator, or agent telemetry.
+Langfuse traces LLM calls, prompts, and evaluations. Useful if your product adds AI features or you want agent telemetry.
 
 Optional self-host:
 
@@ -85,13 +85,13 @@ cd langfuse
 docker compose up -d
 ```
 
-Then set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST` in `.env.local`. Never commit them. This is not part of the game runtime unless the game actually calls an LLM.
+Then set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST` in `.env.local`. Never commit them. This is not part of the product runtime unless the product actually calls an LLM.
 
 ## ragas
 
 Ragas evaluates retrieval-augmented generation pipelines. It is Python-only.
 
-Use it only if the game adds a RAG feature. Keep evaluation scripts under `tools/eval/` (owned by `tools`) or a dedicated worktree. Do not add Python to the game runtime.
+Use it only if the product adds a RAG feature. Keep evaluation scripts under `tools/eval/` (owned by `tools`) or a dedicated worktree. Do not add Python to the product runtime.
 
 ## Adding an upstream safely
 
