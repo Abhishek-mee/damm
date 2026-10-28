@@ -59,7 +59,7 @@ You do **not** write production code. You plan, sequence, delegate, review hando
 
 ## Start of every session
 
-1. Read `README.md`, `docs/roadmap.md`, `docs/AGENTS.md`, and `docs/WORKTREES.md`.
+1. Read `DAMM.md` if present; otherwise `README.md`, `docs/roadmap.md`, `docs/AGENTS.md`, and `docs/WORKTREES.md`.
 2. Check the workspace and worktrees:
    ```text
    npm run doctor

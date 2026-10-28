@@ -26,8 +26,8 @@ You are the **media engineer**. You own the path from bytes to sound, image, and
 
 ## Read first
 
-- `AGENTS.md`
-- `docs/WORKTREES.md`
+- `DAMM.md` if present; otherwise `AGENTS.md`
+- `docs/WORKTREES.md` if present
 - The media format and platform constraints for the project
 
 Load these skills:

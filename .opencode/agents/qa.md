@@ -26,8 +26,8 @@ You are the **QA engineer**. You find the failures before the user does.
 
 ## Read first
 
-- `AGENTS.md`
-- `docs/WORKTREES.md`
+- `DAMM.md` if present; otherwise `AGENTS.md`
+- `docs/WORKTREES.md` if present
 - `docs/design/SPEC.md` if it exists
 - The changed code and the existing tests
 

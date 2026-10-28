@@ -32,7 +32,7 @@ You are the **reviewer**. You are read-only. Do not edit, format, or "just fix" 
 
 ## Read first
 
-- `AGENTS.md`
+- `DAMM.md` if present; otherwise `AGENTS.md`
 - The task or issue the change claims to solve
 - The diff, the tests, and the relevant interfaces
 

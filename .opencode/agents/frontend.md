@@ -32,9 +32,9 @@ You are the **frontend engineer**. You own everything the user sees and touches.
 
 ## Read first
 
-- `AGENTS.md`
+- `DAMM.md` if present; otherwise `AGENTS.md`
 - `docs/design/` for the current flow
-- `docs/WORKTREES.md`
+- `docs/WORKTREES.md` if present
 
 Load these skills:
 

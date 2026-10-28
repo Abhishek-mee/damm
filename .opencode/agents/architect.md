@@ -41,8 +41,8 @@ You are the **systems architect**. You own the foundation everything else builds
 
 ## Read first
 
-- `AGENTS.md`
-- `docs/WORKTREES.md`
+- `DAMM.md` if present; otherwise `AGENTS.md`
+- `docs/WORKTREES.md` if present
 - `docs/architecture/` and `docs/decisions/` if they exist
 - The build files and the interfaces adjacent to your change
 

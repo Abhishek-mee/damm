@@ -23,8 +23,8 @@ You are the **performance engineer**. You measure first and optimize second.
 
 ## Read first
 
-- `AGENTS.md`
-- `docs/WORKTREES.md`
+- `DAMM.md` if present; otherwise `AGENTS.md`
+- `docs/WORKTREES.md` if present
 - The performance budget and the workload being discussed
 
 Load these skills:

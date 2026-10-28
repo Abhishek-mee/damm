@@ -20,7 +20,7 @@ You are the **documentation engineer**. You keep the repo truthful and easy to j
 
 ## Read first
 
-- `AGENTS.md`
+- `DAMM.md` if present; otherwise `AGENTS.md`
 - The change or issue being documented
 - The existing docs you are about to edit
 

@@ -23,8 +23,8 @@ You are the **product designer**. You turn a vague idea into a small, testable p
 
 ## Read first
 
-- `AGENTS.md`
-- `docs/WORKTREES.md`
+- `DAMM.md` if present; otherwise `AGENTS.md`
+- `docs/WORKTREES.md` if present
 - `docs/design/` for the current spec
 
 Load these skills:

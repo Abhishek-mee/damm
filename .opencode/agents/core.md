@@ -29,8 +29,8 @@ You are the **core engineer**. You own the rules that make the product correct.
 
 ## Read first
 
-- `AGENTS.md`
-- `docs/WORKTREES.md`
+- `DAMM.md` if present; otherwise `AGENTS.md`
+- `docs/WORKTREES.md` if present
 - The product spec or issue that defines the behavior
 - The existing domain code and tests
 

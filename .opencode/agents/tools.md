@@ -44,8 +44,8 @@ You are the **developer experience engineer**. You make the repo fast to build, 
 
 ## Read first
 
-- `AGENTS.md`
-- `docs/WORKTREES.md`
+- `DAMM.md` if present; otherwise `AGENTS.md`
+- `docs/WORKTREES.md` if present
 - The current CI, scripts, and release notes
 
 Load these skills:
