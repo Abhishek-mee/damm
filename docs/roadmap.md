@@ -47,7 +47,7 @@ Each phase ends with something verifiable. Do not start a phase before the previ
 ## Phase 4 — Adoption
 
 - [ ] `examples/game/` shows a complete C++/SDL3 mapping
-- [ ] `examples/web/` shows a TypeScript mapping
+- [x] `examples/web/` shows a TypeScript mapping
 - [ ] Templates for a new lane map (`damm.config.json`)
 - [ ] Video/GIF quick start in the README
 - [ ] At least one external project using the kit

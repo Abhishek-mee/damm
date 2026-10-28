@@ -1,0 +1,79 @@
+{
+  "$schema": "../../damm.schema.json",
+  "version": 1,
+  "worktreeRoot": "../web-worktrees",
+  "agents": {
+    "director": [
+      "README.md",
+      "AGENTS.md",
+      "CONTRIBUTING.md",
+      "CODE_OF_CONDUCT.md",
+      "SECURITY.md",
+      "LICENSE",
+      "docs/roadmap.md"
+    ],
+    "architect": [
+      "packages/config/package.json",
+      "packages/config/eslint.js",
+      "packages/config/tsconfig.json",
+      "tsconfig.base.json",
+      "pnpm-workspace.yaml",
+      "eslint.config.js",
+      "prettier.config.js",
+      "docs/architecture/**",
+      "docs/decisions/**"
+    ],
+    "frontend": [
+      "apps/web/app/**",
+      "apps/web/public/**",
+      "apps/web/middleware.ts",
+      "apps/web/next.config.ts",
+      "apps/web/postcss.config.mjs",
+      "apps/web/package.json",
+      "apps/web/tsconfig.json",
+      "packages/ui/src/**",
+      "packages/ui/package.json",
+      "packages/ui/tsconfig.json"
+    ],
+    "core": [
+      "packages/domain/src/**",
+      "packages/domain/package.json",
+      "packages/domain/tsconfig.json"
+    ],
+    "media": [
+      "assets/images/**",
+      "assets/fonts/**",
+      "assets/icons/**"
+    ],
+    "tools": [
+      ".github/**",
+      "scripts/**",
+      "infra/**",
+      "package.json",
+      "pnpm-lock.yaml",
+      ".gitignore",
+      ".nvmrc",
+      "vitest.config.ts"
+    ],
+    "designer": [
+      "design/flows/**",
+      "design/tokens/**",
+      "docs/design/**"
+    ],
+    "qa": [
+      "tests/e2e/**",
+      "tests/fixtures/**",
+      "tests/helpers/**",
+      "playwright.config.ts"
+    ],
+    "reviewer": [],
+    "performance": [
+      "benchmarks/*.mjs",
+      "docs/perf/**"
+    ],
+    "docs": [
+      "docs/guides/**",
+      "CHANGELOG.md"
+    ]
+  }
+}
