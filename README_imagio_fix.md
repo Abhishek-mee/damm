@@ -1,4 +1,4 @@
 ## Quick start
 
-![DAMM Quick Start Flow](docs/assets/quickstart.mp4)
-_From
+![DAMM clean-clone and project attachment flow](docs/assets/quick-start.mp4)
+*
