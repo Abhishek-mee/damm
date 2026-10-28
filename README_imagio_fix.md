@@ -1,3 +1,3 @@
 ## Quick start
 
-<video src="docs/assets/quick-start.mp4" width="100%" controls></video
+See DAMM in action: from a clean clone to a parallel agent fanout in under 30
