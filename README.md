@@ -287,7 +287,7 @@ DAMM is honest about where it is.
 | Worktrees, ownership checks, merge guard | **Ready** |
 | Attach mode and kit installer | **Ready** |
 | Parallel fanout (dry run) | **Ready** |
-| Parallel fanout (live) | **Ready**, needs the `opencode` CLI |
+| Parallel fanout (live) | **Implemented**, not yet run live in this checkout (needs the `opencode` CLI) |
 | Live model check | **Blocked** on an OpenRouter key in this checkout |
 | Community gallery of lane maps | Planned |
 
