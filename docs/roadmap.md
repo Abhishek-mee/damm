@@ -17,13 +17,14 @@ Each phase ends with something verifiable. Do not start a phase before the previ
 
 ## Phase 1 — Parallel by default (current)
 
-- [ ] `npm run attach -- <project>` installs the kit into any git repository
-- [ ] Worktree commands operate on the attached project
-- [ ] `npm run fanout` runs 2–4 agents from a task file, dry-run by default
-- [ ] Per-agent branch, lane, and handoff are visible in one status view
-- [ ] Recovery path for a failed or rate-limited agent run
+- [x] `npm run attach -- <project>` installs the kit into any git repository
+- [x] Worktree commands operate on the attached project
+- [x] `npm run fanout` runs 2–4 agents from a task file, dry-run by default
+- [x] Per-agent branch, lane, and handoff are visible in one status view
+- [x] Recovery path for a failed or rate-limited agent run
+- [ ] A live two-agent fanout on free models
 
-**Acceptance:** a fresh clone can attach to an unrelated repository, run two agents in parallel, and merge both without a lane violation.
+**Acceptance:** a fresh clone can attach to an unrelated repository, run two agents in parallel, and merge both without a lane violation. The attach, lane check, dry run, and merge guard are verified; the live run is blocked in this checkout by the missing `opencode` CLI and an empty `OPENROUTER_API_KEY`.
 
 ## Phase 2 — Reliable free models
 
@@ -65,8 +66,8 @@ Each phase ends with something verifiable. Do not start a phase before the previ
 ## Next action
 
 1. Human: add `OPENROUTER_API_KEY` to `.env.local` and run `npm run check-models`.
-2. Director: run `npm run setup`, then `npm run doctor`.
-3. Director: attach DAMM to one real project and open two worktrees.
-4. Director: run the first fanout with `--dry-run`, then for real with two agents.
+2. Human: install the `opencode` CLI, or set `DAMM_OPENCODE_BIN` to its full path.
+3. Director: attach DAMM to one real project and run the first fanout with two tasks.
+4. Director: read both logs, run `npm run worktree -- check`, then merge one branch at a time.
 
 The live task list is the issue tracker. This file records direction, not every ticket.
