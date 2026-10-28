@@ -230,7 +230,7 @@ Read the full model in [`docs/WORKTREES.md`](docs/WORKTREES.md).
 | `performance` | subagent | `nvidia/nemotron-3-super-120b-a12b:free` | Benchmarks, profiles, budgets |
 | `docs` | subagent | `dots-studio/dots-3-note-preview:free` | README, setup, ADRs, changelog |
 
-Models are free at the time of writing and are checked against OpenRouter's public model list by `npm run validate`. If a model fails the live tool-call test, change one line in its agent file and re-run `npm run check-models`.
+Models are free at the time of writing. `npm run validate` enforces the `openrouter/...:free` shape; `npm run check-models` is the live tool-call test and is the only check that proves a model still works. If one fails, change a single line in its agent file and re-run the check.
 
 <details>
 <summary><strong>17 skills included</strong></summary>
