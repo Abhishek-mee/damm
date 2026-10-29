@@ -1,5 +1,3 @@
 ## Quick start
 
-<div align="center">
-
-<img src="docs/assets/quickstart.gif" alt
+![Quick start recording of the DAMM workflow](docs/assets/quickstart.mp4)
