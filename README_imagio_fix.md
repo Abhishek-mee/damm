@@ -1,4 +1,5 @@
 ## Quick start
 
-![DAMM quick start flow](docs/assets/quick-start.mp4)
-*From
+<div align="center">
+
+<img src="docs/assets/quickstart.gif" alt
